@@ -117,6 +117,56 @@
 }
 html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
 .header-open { background:#000 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
+
+/* --- Sichtbarkeits- und Animationszustände --- */
+#toTop { opacity: 0; pointer-events: none; }           /* Grundzustand */
+#toTop.visible { opacity: 1; pointer-events: auto; }   /* sichtbar */
+/* Einmaliger Herzschlag beim Erscheinen */
+@keyframes heartbeat {
+  0%{transform:translateY(0) scale(1); box-shadow:var(--glass-shadow),0 0 0 rgba(220,38,38,0)}
+  12%{transform:translateY(0) scale(1.06); box-shadow:var(--glass-shadow),0 0 18px rgba(220,38,38,.33)}
+  28%{transform:translateY(0) scale(1.00); box-shadow:var(--glass-shadow),0 0 6px rgba(220,38,38,.14)}
+  45%{transform:translateY(0) scale(1.05); box-shadow:var(--glass-shadow),0 0 16px rgba(220,38,38,.28)}
+  100%{transform:translateY(0) scale(1); box-shadow:var(--glass-shadow),0 0 0 rgba(220,38,38,0)}
+}
+
+@keyframes popIn {
+  from{ transform:translateY(8px) scale(.92); opacity:0; filter:blur(2px) }
+  to  { transform:translateY(0)  scale(1);    opacity:1; filter:blur(0) }
+}
+
+/* Pop-Out (Blase platzt) */
+@keyframes bubblePop {
+  0%  { transform:translateY(0) scale(1);   opacity:1;   filter:blur(0) }
+  60% { transform:translateY(1px) scale(1.10); opacity:.9 }
+  100%{ transform:translateY(4px) scale(.6); opacity:0;  filter:blur(6px) }
+}
+@keyframes popRing { from{transform:scale(1); opacity:.45} to{transform:scale(1.9); opacity:0} }
+/* Flags, die JS setzt – nur KLASSEN, keine Inline-Styles */
+#toTop.revealIn  { animation: popIn 380ms cubic-bezier(.2,.8,.2,1) both; }
+#toTop.hb-once   { animation: heartbeat 1.8s ease-out 1 both; } /* nur 1x */
+#toTop.pop       { animation: bubblePop 360ms cubic-bezier(.2,.7,.2,1) both; }
+#toTop.pop::after{
+  content:""; position:absolute; inset:0; border-radius:9999px; border:2px solid rgba(255,255,255,.35);
+  animation: popRing 360ms ease-out forwards; pointer-events:none;
+}
+
+
+/* States, die wir per JS togglen */
+#toTop.ready       { opacity: 1; pointer-events: auto; }
+#toTop.heartbeat   { animation: heartbeat 2.2s ease-in-out infinite; }
+#toTop.revealIn    { animation: popIn 420ms cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce){
+  #toTop { animation:none !important }
+  #toTop::after { animation:none !important }
+}
+/* Reduced motion: Animationen sehr dezent / aus */
+@media (prefers-reduced-motion: reduce){
+  #toTop { animation: none !important; }
+  #toTop::after { animation: none !important; }
+}
 
   </style>
 
@@ -690,23 +740,82 @@ if (heroImgWrap) {
   onParallax();
   window.addEventListener('scroll', onParallax, { passive: true });
 }
-// Back-to-top Button
+
+
+// === Back-to-top Button mit Hysterese + einmaligem Heartbeat ===
 const toTop = document.getElementById('toTop');
-if (toTop) {
-  const toggleTop = () => {
-    const at = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) > 0.4;
-    toTop.style.opacity = at ? '1' : '0';
-    toTop.style.pointerEvents = at ? 'auto' : 'none';
+
+// Hysterese damit es nicht am 40%-Rand „zittert“
+const SHOW_AT = 0.42;   // zeigen ab 42 %
+const HIDE_AT = 0.38;   // verstecken unter 38 %
+let visible = false;
+let ticking = false;
+
+function applyShow(){
+  if (visible) return;
+  visible = true;
+  // Vorherige Hide-Animation entfernen
+  toTop.classList.remove('pop');
+  // Sichtbar + Einblendeffekt
+  toTop.classList.add('visible','revealIn','hb-once');
+  // Nach Ende der popIn entfernen wir das Flag
+  const onIn = (e) => {
+    if (e.animationName === 'popIn') {
+      toTop.classList.remove('revealIn');
+      toTop.removeEventListener('animationend', onIn);
+    }
   };
-  window.addEventListener('scroll', toggleTop, { passive: true });
-  toggleTop();
-  toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  toTop.addEventListener('animationend', onIn);
+
+  // Heartbeat nur EINMAL – danach Klasse weg
+  const onHB = (e) => {
+    if (e.animationName === 'heartbeat') {
+      toTop.classList.remove('hb-once');
+      toTop.removeEventListener('animationend', onHB);
+    }
+  };
+  toTop.addEventListener('animationend', onHB);
 }
-// Mini-press Effekt
-document.getElementById('toTop')?.addEventListener('click', function(){
-  this.style.transform = 'translateY(0) scale(0.98)';
-  setTimeout(()=> this.style.transform = '', 120);
+
+function applyHide(){
+  if (!visible) return;
+  visible = false;
+  // Sauber: alle Show-Klassen weg, Pop spielen
+  toTop.classList.remove('revealIn','hb-once','visible');
+  toTop.classList.add('pop');
+  // Nach Pop-Out: nur die pop-Klasse wieder abräumen
+  const onOut = (e) => {
+    if (e.animationName === 'bubblePop') {
+      toTop.classList.remove('pop');
+      toTop.removeEventListener('animationend', onOut);
+    }
+  };
+  toTop.addEventListener('animationend', onOut);
+}
+
+function onScrollHandler(){
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? window.scrollY / max : 0;
+    if (ratio >= SHOW_AT) applyShow();
+    else if (ratio <= HIDE_AT) applyHide();
+    ticking = false;
+  });
+}
+
+window.addEventListener('scroll', onScrollHandler, { passive: true });
+onScrollHandler();
+
+// Klick: smooth nach oben + kurzes Press-Feedback (kein Heartbeat-Loop)
+toTop?.addEventListener('click', () => {
+  toTop.style.transform = 'translateY(0) scale(.98)';
+  setTimeout(() => (toTop.style.transform = ''), 140);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+
 
   </script>
 
