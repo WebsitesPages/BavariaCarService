@@ -53,6 +53,68 @@
     /* mobile review-carousel: scrollbar verstecken */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* nav underline */
+.nav-underline { position: absolute; height: 2px; background: #dc2626; bottom: 0; left: 0; width: 0; transition: all .25s ease; }
+.nav-link { position: relative; }
+/* Liquid Glass Back-to-Top */
+.liquid-btn{
+  --glass-bg: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+  --glass-brd: rgba(255,255,255,.22);
+  --glass-shadow: 0 10px 30px rgba(0,0,0,.35);
+  --accent: #dc2626;
+  backdrop-filter: blur(4px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,.25), inset 0 -1px 0 rgba(255,255,255,.06);
+  border-radius: 9999px;
+  color: #fff;
+  transition: transform .2s ease, box-shadow .25s ease, background .25s ease, opacity .2s ease;
+  padding: .6rem .9rem;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.liquid-btn .inner{
+  display: inline-flex; align-items: center; gap: .5rem;
+  position: relative; z-index: 2;
+}
+
+.liquid-btn svg{ color: var(--accent); transition: transform .2s ease; }
+.liquid-btn .label{ font-size: .85rem; opacity: .9; }
+
+/* glossy highlight */
+.liquid-btn::before{
+  content:""; position:absolute; inset: 0; border-radius: inherit; z-index:1;
+  background: radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 60%),
+              linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+  mix-blend-mode: screen; pointer-events:none;
+}
+
+/* weiche „flüssige“ Akzentflecken */
+.liquid-btn .blob{
+  position:absolute; inset:auto; width:120px; height:120px; border-radius:50%;
+  filter: blur(18px);
+  opacity:.35; z-index:0; pointer-events:none;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(220,38,38,.55) 0%, rgba(220,38,38,0) 70%);
+  animation: floatBlob 6s ease-in-out infinite;
+}
+.liquid-btn .b1{ left:-40px; top:-20px; }
+.liquid-btn .b2{ right:-50px; bottom:-30px; animation-delay: -3s; }
+
+@keyframes floatBlob{
+  0%,100%{ transform: translate3d(0,0,0) scale(1); }
+  50%{ transform: translate3d(6px,-6px,0) scale(1.04); }
+}
+
+/* Hover/Press states (Desktop sichtbarer, Mobile subtil) */
+.liquid-btn:hover{ box-shadow: 0 14px 40px rgba(220,38,38,.22), inset 0 1px 0 rgba(255,255,255,.3); }
+.liquid-btn:hover svg{ transform: translateY(-2px); }
+.liquid-btn:active{ transform: translateY(1px) scale(.98); }
+
+/* respektiert Reduced Motion */
+@media (prefers-reduced-motion: reduce){
+  .liquid-btn, .liquid-btn * { transition: none !important; animation: none !important; }
+}
 
   </style>
 
@@ -109,6 +171,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M6.62 10.79a15.534 15.534 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V21a1 1 0 01-1 1C10.85 22 2 13.15 2 2a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.21 2.2z"/></svg>
             <span>+49 176 32754060</span>
           </a>
+          <span id="navUnderline" class="nav-underline hidden lg:block"></span>
         </nav>
 
         <!-- Mobile Burger -> bis lg sichtbar -->
@@ -148,7 +211,7 @@
 </div>
 
   <!-- Hero -->
-  <section id="home" class="relative pt-28 lg:pt-36 pb-16 lg:pb-24">
+  <section id="home" data-spy="home" class="relative pt-28 lg:pt-36 pb-16 lg:pb-24">
 
     <div class="absolute inset-0 -z-10 bg-gradient-to-b from-base-800 via-base to-base"></div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -193,7 +256,7 @@
   </section>
 
   <!-- Leistungen -->
-  <section id="leistungen" class="py-20 sm:py-24 bg-gradient-to-b from-base to-base-800 border-t border-white/10">
+  <section id="leistungen" data-spy="leistungen" class="py-20 sm:py-24 bg-gradient-to-b from-base to-base-800 border-t border-white/10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="reveal text-center">
         <h2 class="text-3xl sm:text-4xl font-extrabold">Unsere <span class="text-accent">Leistungen</span></h2>
@@ -230,7 +293,7 @@
   </section>
 
   <!-- Über uns -->
-  <section id="ueber-uns" class="py-20 sm:py-24">
+  <section id="ueber-uns" data-spy="ueber-uns" class="py-20 sm:py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
       <div class="reveal order-2 lg:order-1">
         <h2 class="text-3xl sm:text-4xl font-extrabold">Ehrlich. Direkt. <span class="text-accent">Meisterqualität.</span></h2>
@@ -250,7 +313,7 @@
   </section>
 
   <!-- Bewertungen -->
-  <section id="bewertungen" class="py-20 sm:py-24 bg-gradient-to-b from-base-800 to-base border-y border-white/10">
+  <section id="bewertungen" data-spy="bewertungen" class="py-20 sm:py-24 bg-gradient-to-b from-base-800 to-base border-y border-white/10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="reveal text-center">
         <h2 class="text-3xl sm:text-4xl font-extrabold">Was Kund:innen sagen</h2>
@@ -311,7 +374,7 @@
   </section>
 
   <!-- Kontakt -->
-  <section id="kontakt" class="py-20 sm:py-24">
+  <section id="kontakt" data-spy="kontakt" class="py-20 sm:py-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-start">
       <div class="reveal">
         <h2 class="text-3xl sm:text-4xl font-extrabold">Kontakt & Anfahrt</h2>
@@ -381,6 +444,23 @@
       </div>
     </div>
   </footer>
+  <!-- Back to Top – Liquid Glass -->
+<button id="toTop"
+aria-label="Nach oben"
+class="fixed right-4 bottom-20 lg:bottom-6 z-40 opacity-0 pointer-events-none
+       liquid-btn group">
+<!-- weiche, flüssige Blobs -->
+<span class="blob b1"></span>
+<span class="blob b2"></span>
+
+<!-- Icon + Label -->
+<span class="inner">
+  <svg viewBox="0 0 24 24" class="h-5 w-5">
+    <path d="M12 5l-6 6m6-6l6 6M12 5v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+</span>
+</button>
 
   <!-- Scripts -->
   <script>
@@ -525,7 +605,63 @@ if (track && slides.length) {
   track.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', updateActive);
 }
+// Scrollspy + Underline
+const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+const underline = document.getElementById('navUnderline');
+
+function highlightById(id) {
+  links.forEach(a => a.classList.toggle('text-accent', a.getAttribute('href') === '#' + id));
+  if (!underline) return;
+  const active = links.find(a => a.getAttribute('href') === '#' + id);
+  if (active) {
+    const rect = active.getBoundingClientRect();
+    const navRect = active.closest('nav').getBoundingClientRect();
+    underline.style.width = rect.width + 'px';
+    underline.style.transform = `translateX(${rect.left - navRect.left}px)`;
+  }
+}
+
+const spyTargets = Array.from(document.querySelectorAll('[data-spy]'));
+const spy = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) highlightById(e.target.getAttribute('data-spy'));
+  });
+}, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+spyTargets.forEach(t => spy.observe(t));
+// Underline erst sichtbar machen, wenn gemessen
+if (underline) underline.style.display = 'block';
+// Parallax fürs Hero-Bild (sanft)
+const heroImgWrap = document.querySelector('#home .relative.rounded-3xl');
+if (heroImgWrap) {
+  const onParallax = () => {
+    const r = heroImgWrap.getBoundingClientRect();
+    const amt = Math.max(-15, Math.min(15, (window.innerHeight - r.top) * 0.03 - 10));
+    heroImgWrap.style.transform = `translateY(${amt}px)`;
+    heroImgWrap.style.transition = 'transform .08s linear';
+  };
+  onParallax();
+  window.addEventListener('scroll', onParallax, { passive: true });
+}
+// Back-to-top Button
+const toTop = document.getElementById('toTop');
+if (toTop) {
+  const toggleTop = () => {
+    const at = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) > 0.4;
+    toTop.style.opacity = at ? '1' : '0';
+    toTop.style.pointerEvents = at ? 'auto' : 'none';
+  };
+  window.addEventListener('scroll', toggleTop, { passive: true });
+  toggleTop();
+  toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+// Mini-press Effekt
+document.getElementById('toTop')?.addEventListener('click', function(){
+  this.style.transform = 'translateY(0) scale(0.98)';
+  setTimeout(()=> this.style.transform = '', 120);
+});
 
   </script>
+
 </body>
 </html>
