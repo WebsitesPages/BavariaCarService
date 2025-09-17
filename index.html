@@ -115,6 +115,8 @@
 @media (prefers-reduced-motion: reduce){
   .liquid-btn, .liquid-btn * { transition: none !important; animation: none !important; }
 }
+html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
+.header-open { background:#000 !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
 
   </style>
 
@@ -151,7 +153,7 @@
 <body class="bg-base text-white selection:bg-accent selection:text-white">
 
   <!-- Header -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-base/80 backdrop-blur border-b border-white/10">
+  <header id="siteHeader" class="fixed top-0 left-0 right-0 z-50 bg-base/80 backdrop-blur border-b border-white/10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="h-16 flex items-center justify-between">
         <a href="#home" class="group inline-flex items-center gap-3" aria-label="Startseite">
@@ -183,28 +185,44 @@
       </div>
     </div>
 
-    <!-- Mobile Overlay Menu (bis lg sichtbar) -->
-    <div id="mobileMenu" class="fixed inset-0 bg-base/95 backdrop-blur-xl translate-x-full transition-transform duration-300 ease-out lg:hidden z-40">
-      <div class="max-w-7xl mx-auto px-6 pt-28 pb-12 relative">
-        <!-- X Button -->
-        <button id="closeMenu" class="absolute top-6 right-6 inline-flex items-center justify-center h-10 w-10 rounded-lg border border-white/20 hover:border-accent/50 hover:text-accent transition" aria-label="Menü schließen">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="h-6 w-6"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.3 10.59 10.6l6.3-6.3Z"/></svg>
-        </button>
-
-        <ul class="space-y-6 text-2xl font-semibold">
-          <li><a class="block hover:text-accent" href="#leistungen" data-menu-close>Leistungen</a></li>
-          <li><a class="block hover:text-accent" href="#ueber-uns" data-menu-close>Über uns</a></li>
-          <li><a class="block hover:text-accent" href="#bewertungen" data-menu-close>Bewertungen</a></li>
-          <li><a class="block hover:text-accent" href="#kontakt" data-menu-close>Kontakt</a></li>
-        </ul>
-        <div class="mt-10">
-          <a href="tel:+49891234567" class="inline-flex items-center gap-2 rounded-2xl border border-accent/50 bg-accent px-5 py-3 text-base font-semibold hover:bg-accent-dark transition">
-            Jetzt anrufen
-          </a>
-        </div>
-      </div>
-    </div>
   </header>
+  <!-- Mobile Overlay Menu (außerhalb des Headers) -->
+<div id="mobileMenu"
+class="fixed inset-0 lg:hidden z-[80]
+       invisible opacity-0 pointer-events-none
+       overflow-y-auto overscroll-contain
+       transition-opacity duration-200 ease-out">
+<!-- Klick auf diesen Backdrop schließt -->
+<div id="menuBackdrop" class="absolute inset-0 bg-black"></div>
+
+<!-- Inhalt; Top-Padding dynamisch = Headerhöhe -->
+<div class="relative max-w-7xl mx-auto px-6 pt-[var(--hdr,7rem)] pb-12">
+<button id="closeMenu"
+ class="absolute top-6 right-6 inline-flex items-center justify-center h-10 w-10
+        rounded-lg border border-white/20 hover:border-accent/50 hover:text-accent transition"
+ aria-label="Menü schließen">
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+   <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.3 10.59 10.6l6.3-6.3Z"/>
+ </svg>
+</button>
+
+<ul class="space-y-6 text-2xl font-semibold">
+ <li><a class="block hover:text-accent" href="#leistungen" data-menu-close>Leistungen</a></li>
+ <li><a class="block hover:text-accent" href="#ueber-uns" data-menu-close>Über uns</a></li>
+ <li><a class="block hover:text-accent" href="#bewertungen" data-menu-close>Bewertungen</a></li>
+ <li><a class="block hover:text-accent" href="#kontakt" data-menu-close>Kontakt</a></li>
+</ul>
+
+<div class="mt-10">
+ <a href="tel:+49891234567"
+    class="inline-flex items-center gap-2 rounded-2xl border border-accent/50 bg-accent px-5 py-3 text-base font-semibold hover:bg-accent-dark transition">
+   Jetzt anrufen
+ </a>
+</div>
+</div>
+</div>
+
+
 <!-- Scroll Progress (unter dem Header) -->
 <div id="scrollProgress" class="fixed left-0 right-0 z-40" aria-hidden="true" style="top:64px">
   <div id="scrollProgressBar" class="h-1.5 bg-accent w-0"></div>
@@ -468,38 +486,67 @@ class="fixed right-4 bottom-20 lg:bottom-6 z-40 opacity-0 pointer-events-none
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Mobile menu toggle
-    const burger = document.getElementById('burger');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const iconOpen = document.getElementById('icon-open');
-    const iconClose = document.getElementById('icon-close');
-    const closeMenuBtn = document.getElementById('closeMenu');
+    // Mobile menu toggle (fade in/out, 100% schwarz)
+// Mobile menu toggle (vollschwarz, ohne Blur)
+// --- Mobile menu toggle (Fullscreen, schwarz, scrollbar) ---
+const burger = document.getElementById('burger');
+const mobileMenu = document.getElementById('mobileMenu');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const iconOpen = document.getElementById('icon-open');
+const iconClose = document.getElementById('icon-close');
+const closeMenuBtn = document.getElementById('closeMenu');
+const siteHeader = document.getElementById('siteHeader');
 
-    function toggleMenu(open) {
-      const isOpen = open ?? mobileMenu.classList.contains('translate-x-full');
-      if (isOpen) {
-        mobileMenu.classList.remove('translate-x-full');
-        document.body.classList.add('no-scroll');
-        iconOpen.classList.add('hidden');
-        iconClose.classList.remove('hidden');
-        burger.setAttribute('aria-expanded', 'true');
-      } else {
-        mobileMenu.classList.add('translate-x-full');
-        document.body.classList.remove('no-scroll');
-        iconOpen.classList.remove('hidden');
-        iconClose.classList.add('hidden');
-        burger.setAttribute('aria-expanded', 'false');
-      }
-    }
+function applyHeaderHeightToMenu(){
+  // Headerhöhe -> CSS-Variable, damit das Padding oben passt
+  const h = siteHeader?.offsetHeight || 64;
+  mobileMenu.style.setProperty('--hdr', h + 'px');
+}
 
-    burger.addEventListener('click', () => toggleMenu());
-    closeMenuBtn.addEventListener('click', () => toggleMenu(false));
-    mobileMenu.querySelectorAll('[data-menu-close]').forEach(a => a.addEventListener('click', () => toggleMenu(false)));
+function toggleMenu(open){
+  const isClosed = mobileMenu.classList.contains('pointer-events-none');
+  const shouldOpen = open ?? isClosed;
 
-    // Schließen bei Klick außerhalb des Innencontainers
-    mobileMenu.addEventListener('click', (e) => {
-      const container = e.currentTarget.querySelector('.relative');
-      if (e.target === mobileMenu) toggleMenu(false);
-    });
+  if (shouldOpen){
+    applyHeaderHeightToMenu();
+    mobileMenu.classList.remove('invisible','opacity-0','pointer-events-none');
+    mobileMenu.classList.add('opacity-100');
+    // Body sperren, Header solide schwarz
+    document.body.classList.add('no-scroll');
+    siteHeader?.classList.add('header-open');
+    // Icons
+    iconOpen.classList.add('hidden');
+    iconClose.classList.remove('hidden');
+    burger.setAttribute('aria-expanded','true');
+    // Menü an den Anfang scrollen (falls User weit unten war)
+    mobileMenu.scrollTop = 0;
+  } else {
+    mobileMenu.classList.add('opacity-0','pointer-events-none','invisible');
+    mobileMenu.classList.remove('opacity-100');
+    document.body.classList.remove('no-scroll');
+    siteHeader?.classList.remove('header-open');
+    iconOpen.classList.remove('hidden');
+    iconClose.classList.add('hidden');
+    burger.setAttribute('aria-expanded','false');
+  }
+}
+
+burger.addEventListener('click', () => toggleMenu());
+closeMenuBtn.addEventListener('click', () => toggleMenu(false));
+mobileMenu.querySelectorAll('[data-menu-close]').forEach(a => a.addEventListener('click', () => toggleMenu(false)));
+// Klick auf die schwarze Fläche schließt
+menuBackdrop.addEventListener('click', () => toggleMenu(false));
+// Headerhöhe neu setzen bei Resize/Orientation-Change
+window.addEventListener('resize', applyHeaderHeightToMenu);
+
+
+// Schließen bei Klick auf die schwarze Overlay-Fläche
+mobileMenu.addEventListener('click', (e) => {
+  const overlay = mobileMenu.firstElementChild; // das absolute Overlay
+  if (e.target === overlay) toggleMenu(false);
+});
+
+
 
     // ESC zum Schließen
     window.addEventListener('keydown', (e) => {
