@@ -43,6 +43,56 @@
     }
   </script>
   <style>
+   /* ==== Dynamic Glass Light (nur Scroll, smooth & dezent) ==== */
+:root{
+  --gx: 50%;   /* X bleibt mittig, nur Scroll steuert Y */
+  --gy: 22%;   /* Y-Position des Lichts (wird per JS animiert) */
+  --gshine: .7; /* generelle Intensität (0–1), bewusst gedämpft */
+}
+
+/* Auf alle Glas-Elemente legen, die “leben” sollen */
+.glass-dynamic{
+  position: relative;
+  isolation: isolate;
+}
+
+/* Dezenter Licht-Layer – patched */
+.glass-dynamic::after{
+  content:"";
+  position:absolute; inset:-1px; border-radius:inherit; pointer-events:none; z-index:2;
+  mix-blend-mode: screen;
+  /* NEU: Repaint-Hint, damit CSS-Var-Änderungen flüssig ankommen */
+  will-change: background, opacity;
+
+  /* weiche Radial-Reflexion + sehr subtiler Sweep */
+  background:
+    radial-gradient(120% 120% at var(--gx) var(--gy),
+      rgba(255,255,255, calc(.16 * var(--gshine))) 0%,
+      rgba(255,255,255, calc(.06 * var(--gshine))) 32%,
+      rgba(255,255,255, 0) 60%),
+    conic-gradient(from 180deg at var(--gx) var(--gy),
+      rgba(255,255,255, .07) 0%,
+      rgba(255,255,255, 0) 28%,
+      rgba(255,255,255, .045) 52%,
+      rgba(255,255,255, 0) 76%,
+      rgba(255,255,255, .07) 100%);
+
+  /* NEU: ganz zarter Schein, wirkt “gläserner” und macht Bewegung sichtbarer */
+  filter: saturate(115%) brightness(1.02) blur(0.2px);
+
+  /* leicht angehoben, aber weiterhin dezent */
+  opacity: .78;
+}
+
+
+/* Reduced motion: statisch & noch dezenter */
+@media (prefers-reduced-motion: reduce){
+  .glass-dynamic::after{
+    opacity: .6;
+  }
+}
+
+
     html { scroll-behavior: smooth; }
     /* Scroll-Reveal Utility: initial state */
     .reveal { opacity: 0; transform: translateY(18px); }
@@ -168,6 +218,80 @@ html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
   #toTop::after { animation: none !important; }
 }
 
+/* ==========================================================
+   PUNKT 5: Einheitliche Glass-UI + Micro-Interactions
+   ========================================================== */
+:root{
+  --g-bg: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  --g-brd: rgba(255,255,255,.18);
+  --g-shadow: 0 10px 28px rgba(0,0,0,.32);
+  --g-shadow-hover: 0 18px 48px rgba(0,0,0,.42);
+  --g-accent: #dc2626;
+}
+
+/* Karten (mit Padding) */
+.glass-card{
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid var(--g-brd);
+  background: var(--g-bg);
+  box-shadow: var(--g-shadow);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+.glass-card::before{ /* dezenter Glanz */
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background: radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,.12), rgba(255,255,255,0) 60%);
+}
+
+/* Rahmen ohne Padding (für Bilder/Map) */
+.glass-frame{
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid var(--g-brd);
+  background: var(--g-bg);
+  box-shadow: var(--g-shadow);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+/* Hover-Lift (edel) */
+.hover-lift{ transition: transform .22s ease, box-shadow .25s ease, border-color .25s ease; }
+.hover-lift:hover{ transform: translateY(-2px); box-shadow: var(--g-shadow-hover); border-color: rgba(255,255,255,.28); }
+
+/* Buttons */
+.glass-button{
+  position:relative; display:inline-flex; align-items:center; gap:.5rem;
+  border-radius: 1rem; padding: .75rem 1.1rem; font-weight:600; color:#fff;
+  border:1px solid var(--g-brd); background: var(--g-bg); box-shadow: var(--g-shadow);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  transition: transform .18s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+}
+.glass-button::before{ /* soft shine */
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+}
+.glass-button:active{ transform: translateY(1px) scale(.985); }
+.glass-button:hover{ box-shadow: var(--g-shadow-hover); }
+
+/* Varianten */
+.glass-primary{ background: linear-gradient(180deg, rgba(220,38,38,.92), rgba(220,38,38,.86)); border-color: rgba(220,38,38,.62); }
+.glass-primary:hover{ filter: brightness(1.04); }
+.glass-outline{ border-color: rgba(220,38,38,.42); }
+.glass-outline:hover{ border-color: rgba(220,38,38,.66); background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); }
+
+/* Bildlook konsistent */
+.img-tone{ filter: saturate(1.04) contrast(1.02) brightness(1.02); transition: filter .3s ease; }
+.img-tone:hover{ filter: saturate(1.08) contrast(1.03) brightness(1.03); }
+
+/* Press-Feedback für Touch */
+.pressable:active{ transform: translateY(1px) scale(.985); }
+
+@media (prefers-reduced-motion: reduce){
+  .hover-lift, .hover-lift:hover, .glass-button, .glass-button:active, .pressable:active{ transition:none !important; transform:none !important; }
+}
+
   </style>
 
   <!-- Open Graph / Schema for SEO -->
@@ -193,7 +317,7 @@ html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
     "geo": {"@type":"GeoCoordinates","latitude":"48.137","longitude":"11.575"},
     "url": "https://www.autowerkstatt-muenchen.example",
     "telephone": "+49 176 32754060",
-    "openingHours": ["Mo-Fr 08:00-18:00", "Sa 09:00-13:00"],
+    "openingHours": ["Mo-Fr 08:00-18:00", "Sa 09:00-14:00"],
     "priceRange": "€€",
     "areaServed": "München und Umgebung",
     "sameAs": ["https://g.page/your-gmb"]
@@ -207,27 +331,24 @@ html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="h-16 flex items-center justify-between">
         <a href="#home" class="group inline-flex items-center gap-3" aria-label="Startseite">
-          <!-- <span class="h-9 w-9 rounded bg-accent/10 grid place-items-center border border-accent/30">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-accent"><path d="M3 13h2v-2H3v2Zm4 0h10v-2H7v2Zm12 0h2v-2h-2v2Z"/></svg>
-          </span> -->
           <span class="font-extrabold tracking-tight text-lg">Bavaria Car Service <span class="text-accent">München</span></span>
         </a>
 
-        <!-- Desktop Nav -> erscheint erst ab lg, damit es früher zusammenklappt -->
+        <!-- Desktop Nav -->
         <nav class="hidden lg:flex items-center gap-8">
           <a href="#leistungen" class="hover:text-accent transition">Leistungen</a>
           <a href="#ueber-uns" class="hover:text-accent transition">Über uns</a>
           <a href="#bewertungen" class="hover:text-accent transition">Bewertungen</a>
           <a href="#kontakt" class="hover:text-accent transition">Kontakt</a>
-          <a href="tel:+49891234567" class="inline-flex items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-2 hover:bg-accent hover:text-white transition shadow-soft">
+          <a href="tel:+49891234567" class="glass-button glass-outline pressable inline-flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M6.62 10.79a15.534 15.534 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V21a1 1 0 01-1 1C10.85 22 2 13.15 2 2a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.21 2.2z"/></svg>
             <span>+49 176 32754060</span>
           </a>
           <span id="navUnderline" class="nav-underline hidden lg:block"></span>
         </nav>
 
-        <!-- Mobile Burger -> bis lg sichtbar -->
-        <button id="burger" class="lg:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-white/10 hover:border-accent/50 hover:text-accent transition" aria-label="Menü öffnen" aria-expanded="false">
+        <!-- Mobile Burger -->
+        <button id="burger" type="button" class="lg:hidden pressable inline-flex items-center justify-center h-10 w-10 rounded-lg border border-white/10 hover:border-accent/50 hover:text-accent transition" aria-label="Menü öffnen" aria-expanded="false">
           <span class="sr-only">Menü</span>
           <svg id="icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z"/></svg>
           <svg id="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 hidden"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.3 10.59 10.6l6.3-6.3Z"/></svg>
@@ -236,19 +357,19 @@ html.no-scroll, body.no-scroll { height: 100%; overflow: hidden; }
     </div>
 
   </header>
-  <!-- Mobile Overlay Menu (außerhalb des Headers) -->
+  <!-- Mobile Overlay Menu -->
 <div id="mobileMenu"
 class="fixed inset-0 lg:hidden z-[80]
        invisible opacity-0 pointer-events-none
        overflow-y-auto overscroll-contain
        transition-opacity duration-200 ease-out">
-<!-- Klick auf diesen Backdrop schließt -->
+<!-- Backdrop -->
 <div id="menuBackdrop" class="absolute inset-0 bg-black"></div>
 
 <!-- Inhalt; Top-Padding dynamisch = Headerhöhe -->
 <div class="relative max-w-7xl mx-auto px-6 pt-[var(--hdr,7rem)] pb-12">
-<button id="closeMenu"
- class="absolute top-6 right-6 inline-flex items-center justify-center h-10 w-10
+<button id="closeMenu" type="button"
+ class="absolute top-6 right-6 pressable inline-flex items-center justify-center h-10 w-10
         rounded-lg border border-white/20 hover:border-accent/50 hover:text-accent transition"
  aria-label="Menü schließen">
  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
@@ -265,9 +386,7 @@ class="fixed inset-0 lg:hidden z-[80]
 
 <div class="mt-10">
  <a href="tel:+49891234567"
-    class="inline-flex items-center gap-2 rounded-2xl border border-accent/50 bg-accent px-5 py-3 text-base font-semibold hover:bg-accent-dark transition">
-   Jetzt anrufen
- </a>
+    class="glass-button glass-primary">Jetzt anrufen</a>
 </div>
 </div>
 </div>
@@ -291,8 +410,8 @@ class="fixed inset-0 lg:hidden z-[80]
           </h1>
           <p class="mt-5 text-white/80 max-w-prose">Vom Ölwechsel bis zur komplexen Diagnose – wir bringen Ihr Fahrzeug schnell und fair wieder auf die Straße. Kostenlose Erstberatung & kurzfristige Termine.</p>
           <div class="mt-8 flex flex-wrap gap-4">
-            <a href="tel:+4917632754060" class="rounded-2xl bg-accent px-6 py-3 font-semibold hover:bg-accent-dark transition shadow-soft">Jetzt anrufen</a>
-            <a href="#leistungen" class="rounded-2xl border border-white/15 px-6 py-3 font-semibold hover:border-accent/60 hover:text-accent transition">Leistungen ansehen</a>
+            <a href="tel:+4917632754060" class="glass-button glass-primary pressable">Jetzt anrufen</a>
+            <a href="#leistungen" class="glass-button glass-outline pressable">Leistungen ansehen</a>
           </div>
           <div class="mt-6 flex items-center gap-6 text-sm text-white/70">
             <div class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-accent"></span> TÜV-Vorbereitung</div>
@@ -301,8 +420,8 @@ class="fixed inset-0 lg:hidden z-[80]
           </div>
         </div>
         <div class="reveal lg:justify-self-end">
-          <div class="relative rounded-3xl overflow-hidden  shadow-soft">
-            <img src="Logo.jpg" alt="Moderne Kfz-Werkstatt in München" class="h-full w-full object-cover">
+          <div class="relative rounded-3xl overflow-hidden shadow-soft">
+            <img src="Logo.jpg" alt="Moderne Kfz-Werkstatt in München" class="h-full w-full object-cover img-tone">
             <div class="absolute inset-0 bg-gradient-to-tr from-base/60 via-transparent to-transparent"></div>
             <div class="hidden lg:flex absolute bottom-5 right-5 items-center gap-3 bg-base/70 backdrop-blur px-4 py-2 rounded-xl border border-white/10 shadow-soft">
               <span class="h-2.5 w-2.5 rounded-full bg-accent"></span>
@@ -314,7 +433,7 @@ class="fixed inset-0 lg:hidden z-[80]
 <div class="mt-3 lg:hidden w-full">
   <div class="mx-auto w-max flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/85 backdrop-blur">
     <span class="h-2 w-2 rounded-full bg-accent"></span>
-    <span>Geöffnet: Mo–Fr 08–18 Uhr</span>
+    <span>Geöffnet: Mo–Fr 08–18 Uhr & Sa 08-14 Uhr</span>
   </div>
 </div>
 
@@ -331,28 +450,28 @@ class="fixed inset-0 lg:hidden z-[80]
         <p class="mt-3 text-white/70">Alles aus einer Hand – für alle Marken und Modelle.</p>
       </div>
       <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Card -->
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <!-- Cards -->
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">Inspektion & Wartung</h3>
           <p class="mt-2 text-white/70">Nach Herstellervorgaben inkl. Serviceheft-Eintrag. Flüssigkeiten, Filter, Bremsen, Software-Checks.</p>
         </article>
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">Diagnose & Elektronik</h3>
           <p class="mt-2 text-white/70">Fehlerauslese, Steuergeräte, Sensorik – moderne Messtechnik für klare Befunde.</p>
         </article>
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">Bremsen & Fahrwerk</h3>
           <p class="mt-2 text-white/70">Scheiben, Beläge, Stoßdämpfer, Achsvermessung – Sicherheit zuerst.</p>
         </article>
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">Reifen & Räder</h3>
           <p class="mt-2 text-white/70">Montage, Wuchten, Einlagerung. Saisonwechsel zum Festpreis.</p>
         </article>
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">Auspuff & Motor</h3>
           <p class="mt-2 text-white/70">Abgasanlage, Zahnriemen/Steuerkette, Ölwechsel – volle Performance.</p>
         </article>
-        <article class="reveal rounded-2xl border border-white/10 bg-base/70 p-6 hover:border-accent/40 transition">
+        <article class="reveal glass-card glass-dynamic hover-lift p-6 transition">
           <h3 class="text-xl font-bold">TÜV-Vorbereitung</h3>
           <p class="mt-2 text-white/70">Vorab-Check, Mängelbeseitigung, HU/AU-Koordination. Stressfrei zur Plakette.</p>
         </article>
@@ -373,8 +492,8 @@ class="fixed inset-0 lg:hidden z-[80]
         </ul>
       </div>
       <div class="reveal order-1 lg:order-2">
-        <div class="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 shadow-soft">
-          <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1400&auto=format&fit=crop" alt="Team der Kfz-Werkstatt bei der Arbeit" class="h-full w-full object-cover" />
+        <div class="aspect-[4/3] glass-frame glass-dynamic overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1542362567-b07e54358753?q=80&w=1400&auto=format&fit=crop" alt="Team der Kfz-Werkstatt bei der Arbeit" class="h-full w-full object-cover img-tone" />
         </div>
       </div>
     </div>
@@ -396,21 +515,21 @@ class="fixed inset-0 lg:hidden z-[80]
       
         <div id="reviewTrack" class="no-scrollbar flex gap-5 overflow-x-auto snap-x snap-mandatory pb-6 px-2">
           <!-- Slide 1 -->
-          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 rounded-3xl border border-white/10 bg-base/70 p-6 shadow-soft transition-transform duration-300 will-change-transform">
+          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 glass-card glass-dynamic p-6 hover-lift transition-transform duration-300 will-change-transform">
             <blockquote class="text-white/85 text-lg leading-relaxed">
               „Top Service, super schnell und fairer Preis. Absolut empfehlenswert!“
             </blockquote>
             <figcaption class="mt-4 text-white/60">— Anna K., München</figcaption>
           </figure>
           <!-- Slide 2 -->
-          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 rounded-3xl border border-white/10 bg-base/70 p-6 shadow-soft transition-transform duration-300 will-change-transform">
+          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 glass-card glass-dynamic p-6 hover-lift transition-transform duration-300 will-change-transform">
             <blockquote class="text-white/85 text-lg leading-relaxed">
               „Ehrliche Beratung, saubere Arbeit. Hier fühlt man sich gut aufgehoben.“
             </blockquote>
             <figcaption class="mt-4 text-white/60">— Mehmet Y., Garching</figcaption>
           </figure>
           <!-- Slide 3 -->
-          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 rounded-3xl border border-white/10 bg-base/70 p-6 shadow-soft transition-transform duration-300 will-change-transform">
+          <figure class="review-slide snap-center shrink-0 w-[85%] mx-2 glass-card glass-dynamic p-6 hover-lift transition-transform duration-300 will-change-transform">
             <blockquote class="text-white/85 text-lg leading-relaxed">
               „TÜV-Vorbereitung ohne Stress – hat direkt geklappt. Danke!“
             </blockquote>
@@ -424,15 +543,15 @@ class="fixed inset-0 lg:hidden z-[80]
       
       <!-- DESKTOP: klassisches Grid -->
       <div class="hidden lg:grid md:grid-cols-3 gap-6 mt-12">
-        <figure class="rounded-2xl border border-white/10 bg-base/70 p-6">
+        <figure class="glass-card glass-dynamic p-6 hover-lift">
           <blockquote class="text-white/85">„Top Service, super schnell und fairer Preis. Absolut empfehlenswert!“</blockquote>
           <figcaption class="mt-4 text-white/60">— Anna K., München</figcaption>
         </figure>
-        <figure class="rounded-2xl border border-white/10 bg-base/70 p-6">
+        <figure class="glass-card glass-dynamic p-6 hover-lift">
           <blockquote class="text-white/85">„Ehrliche Beratung, saubere Arbeit. Hier fühlt man sich gut aufgehoben.“</blockquote>
           <figcaption class="mt-4 text-white/60">— Mehmet Y., Garching</figcaption>
         </figure>
-        <figure class="rounded-2xl border border-white/10 bg-base/70 p-6">
+        <figure class="glass-card glass-dynamic p-6 hover-lift">
           <blockquote class="text-white/85">„TÜV-Vorbereitung ohne Stress – hat direkt geklappt. Danke!“</blockquote>
           <figcaption class="mt-4 text-white/60">— Laura S., Sendling</figcaption>
         </figure>
@@ -449,30 +568,30 @@ class="fixed inset-0 lg:hidden z-[80]
         <p class="mt-3 text-white/80">Bavaria Car Service München • Triebstraße 3 • 80993 München</p>
 
         <div class="mt-6 grid sm:grid-cols-2 gap-4 text-white/80">
-          <div class="rounded-2xl border border-white/10 p-4">
+          <div class="glass-card glass-dynamic p-4 hover-lift">
             <div class="text-white/60 text-sm">Telefon</div>
             <a class="font-semibold hover:text-accent transition" href="tel:+49891234567">+49 176 32754060</a>
           </div>
-          <div class="rounded-2xl border border-white/10 p-4">
+          <div class="glass-card glass-dynamic p-4 hover-lift">
             <div class="text-white/60 text-sm">E-Mail</div>
             <a class="font-semibold hover:text-accent transition" href="mailto:Bavaria.carservice@outlook.de">Bavaria.carservice@outlook.de</a>
           </div>
-          <div class="rounded-2xl border border-white/10 p-4">
+          <div class="glass-card glass-dynamic p-4 hover-lift">
             <div class="text-white/60 text-sm">Öffnungszeiten</div>
             <div class="font-semibold">Mo–Fr 08:00–18:00, Sa 09:00–13:00</div>
           </div>
-          <div class="rounded-2xl border border-white/10 p-4">
+          <div class="glass-card glass-dynamic p-4 hover-lift">
             <div class="text-white/60 text-sm">Adresse</div>
             <div class="font-semibold">Triebstraße 3, 80993 München</div>
           </div>
         </div>
         <div class="mt-6 flex gap-4">
-          <a href="https://maps.google.com/?q=Musterstraße%2012%2080331%20München" class="rounded-2xl border border-accent/50 bg-accent px-6 py-3 font-semibold hover:bg-accent-dark transition">Route planen</a>
-          <a href="tel:+49891234567" class="rounded-2xl border border-white/15 px-6 py-3 font-semibold hover:border-accent/60 hover:text-accent transition">Jetzt anrufen</a>
+          <a href="https://maps.google.com/?q=Musterstraße%2012%2080331%20München" class="glass-button glass-primary pressable">Route planen</a>
+          <a href="tel:+49891234567" class="glass-button glass-outline pressable">Jetzt anrufen</a>
         </div>
       </div>
       <div class="reveal lg:sticky lg:top-24">
-        <div class="rounded-3xl border border-white/10 overflow-hidden shadow-soft bg-base/70">
+        <div class="glass-frame glass-dynamic overflow-hidden">
           <div class="aspect-[4/3] w-full">
             <iframe
               title="Anfahrt – Bavaria Car Service München"
@@ -493,7 +612,6 @@ class="fixed inset-0 lg:hidden z-[80]
       <div>
         <div class="font-extrabold text-lg">Bavaria Car Service <span class="text-accent">München</span></div>
         <p class="mt-3 text-white/70">Triebstraße 3 · 80993 München</p>
-        <!-- <p class="text-white/70">USt-ID: DE123456789</p> -->
       </div>
       <nav class="text-white/70">
         <ul class="space-y-2">
@@ -517,16 +635,12 @@ class="fixed inset-0 lg:hidden z-[80]
 aria-label="Nach oben"
 class="fixed right-4 bottom-20 lg:bottom-6 z-40 opacity-0 pointer-events-none
        liquid-btn group">
-<!-- weiche, flüssige Blobs -->
 <span class="blob b1"></span>
 <span class="blob b2"></span>
-
-<!-- Icon + Label -->
 <span class="inner">
   <svg viewBox="0 0 24 24" class="h-5 w-5">
     <path d="M12 5l-6 6m6-6l6 6M12 5v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
-
 </span>
 </button>
 
@@ -536,9 +650,6 @@ class="fixed right-4 bottom-20 lg:bottom-6 z-40 opacity-0 pointer-events-none
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Mobile menu toggle
-    // Mobile menu toggle (fade in/out, 100% schwarz)
-// Mobile menu toggle (vollschwarz, ohne Blur)
-// --- Mobile menu toggle (Fullscreen, schwarz, scrollbar) ---
 const burger = document.getElementById('burger');
 const mobileMenu = document.getElementById('mobileMenu');
 const menuBackdrop = document.getElementById('menuBackdrop');
@@ -548,7 +659,6 @@ const closeMenuBtn = document.getElementById('closeMenu');
 const siteHeader = document.getElementById('siteHeader');
 
 function applyHeaderHeightToMenu(){
-  // Headerhöhe -> CSS-Variable, damit das Padding oben passt
   const h = siteHeader?.offsetHeight || 64;
   mobileMenu.style.setProperty('--hdr', h + 'px');
 }
@@ -561,14 +671,11 @@ function toggleMenu(open){
     applyHeaderHeightToMenu();
     mobileMenu.classList.remove('invisible','opacity-0','pointer-events-none');
     mobileMenu.classList.add('opacity-100');
-    // Body sperren, Header solide schwarz
     document.body.classList.add('no-scroll');
     siteHeader?.classList.add('header-open');
-    // Icons
     iconOpen.classList.add('hidden');
     iconClose.classList.remove('hidden');
     burger.setAttribute('aria-expanded','true');
-    // Menü an den Anfang scrollen (falls User weit unten war)
     mobileMenu.scrollTop = 0;
   } else {
     mobileMenu.classList.add('opacity-0','pointer-events-none','invisible');
@@ -584,19 +691,13 @@ function toggleMenu(open){
 burger.addEventListener('click', () => toggleMenu());
 closeMenuBtn.addEventListener('click', () => toggleMenu(false));
 mobileMenu.querySelectorAll('[data-menu-close]').forEach(a => a.addEventListener('click', () => toggleMenu(false)));
-// Klick auf die schwarze Fläche schließt
 menuBackdrop.addEventListener('click', () => toggleMenu(false));
-// Headerhöhe neu setzen bei Resize/Orientation-Change
 window.addEventListener('resize', applyHeaderHeightToMenu);
 
-
-// Schließen bei Klick auf die schwarze Overlay-Fläche
 mobileMenu.addEventListener('click', (e) => {
-  const overlay = mobileMenu.firstElementChild; // das absolute Overlay
+  const overlay = mobileMenu.firstElementChild;
   if (e.target === overlay) toggleMenu(false);
 });
-
-
 
     // ESC zum Schließen
     window.addEventListener('keydown', (e) => {
@@ -650,16 +751,14 @@ setProgressTop();
 updateScrollProgress();
 window.addEventListener('resize', () => { setProgressTop(); updateScrollProgress(); });
 window.addEventListener('scroll', updateScrollProgress);
-
-// wenn das mobile Menü die Headerhöhe ändert, danach neu setzen
 ['click','keydown'].forEach(ev => window.addEventListener(ev, setProgressTop));
-// --- Mobile Reviews Carousel ---
+
+// Reviews Carousel (mobil)
 const track = document.getElementById('reviewTrack');
 const slides = track ? Array.from(track.querySelectorAll('.review-slide')) : [];
 const dotsWrap = document.getElementById('reviewDots');
 
 if (track && slides.length) {
-  // Dots bauen
   slides.forEach((_, i) => {
     const b = document.createElement('button');
     b.className = 'h-2.5 w-2.5 rounded-full bg-white/30 transition-all duration-200';
@@ -680,28 +779,26 @@ if (track && slides.length) {
       const mid = rect.left + rect.width / 2;
       const d = Math.abs(mid - center);
       if (d < best) { best = d; activeIdx = idx; }
-      // Scale/Glow je nach Nähe zum Zentrum
       const proximity = Math.max(0, 1 - (d / (track.clientWidth * 0.6)));
-      const scale = 0.95 + proximity * 0.05; // 0.95–1.00
+      const scale = 0.95 + proximity * 0.05;
       el.style.transform = `scale(${scale})`;
       el.style.boxShadow = `0 12px 30px rgba(0,0,0,${0.25 + proximity * 0.25})`;
       el.style.borderColor = `rgba(255,255,255,${0.1 + proximity * 0.15})`;
     });
 
-    // Dots aktualisieren
     dotsWrap.querySelectorAll('button').forEach((d, i) => {
       d.className = 'h-2.5 w-2.5 rounded-full transition-all duration-200 ' +
         (i === activeIdx ? 'bg-accent w-6' : 'bg-white/30 w-2.5');
     });
   }
 
-  // Initial + Events
   updateActive();
   let raf;
   const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(updateActive); };
   track.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', updateActive);
 }
+
 // Scrollspy + Underline
 const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
 const underline = document.getElementById('navUnderline');
@@ -726,9 +823,9 @@ const spy = new IntersectionObserver((entries) => {
 }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
 
 spyTargets.forEach(t => spy.observe(t));
-// Underline erst sichtbar machen, wenn gemessen
 if (underline) underline.style.display = 'block';
-// Parallax fürs Hero-Bild (sanft)
+
+// Parallax fürs Hero-Bild
 const heroImgWrap = document.querySelector('#home .relative.rounded-3xl');
 if (heroImgWrap) {
   const onParallax = () => {
@@ -741,24 +838,18 @@ if (heroImgWrap) {
   window.addEventListener('scroll', onParallax, { passive: true });
 }
 
-
-// === Back-to-top Button mit Hysterese + einmaligem Heartbeat ===
+// Back-to-top Button Logik
 const toTop = document.getElementById('toTop');
-
-// Hysterese damit es nicht am 40%-Rand „zittert“
-const SHOW_AT = 0.32;   // zeigen ab 42 %
-const HIDE_AT = 0.28;   // verstecken unter 38 %
+const SHOW_AT = 0.32;   
+const HIDE_AT = 0.28;   
 let visible = false;
 let ticking = false;
 
 function applyShow(){
   if (visible) return;
   visible = true;
-  // Vorherige Hide-Animation entfernen
   toTop.classList.remove('pop');
-  // Sichtbar + Einblendeffekt
   toTop.classList.add('visible','revealIn','hb-once');
-  // Nach Ende der popIn entfernen wir das Flag
   const onIn = (e) => {
     if (e.animationName === 'popIn') {
       toTop.classList.remove('revealIn');
@@ -767,7 +858,6 @@ function applyShow(){
   };
   toTop.addEventListener('animationend', onIn);
 
-  // Heartbeat nur EINMAL – danach Klasse weg
   const onHB = (e) => {
     if (e.animationName === 'heartbeat') {
       toTop.classList.remove('hb-once');
@@ -780,10 +870,8 @@ function applyShow(){
 function applyHide(){
   if (!visible) return;
   visible = false;
-  // Sauber: alle Show-Klassen weg, Pop spielen
   toTop.classList.remove('revealIn','hb-once','visible');
   toTop.classList.add('pop');
-  // Nach Pop-Out: nur die pop-Klasse wieder abräumen
   const onOut = (e) => {
     if (e.animationName === 'bubblePop') {
       toTop.classList.remove('pop');
@@ -808,13 +896,53 @@ function onScrollHandler(){
 window.addEventListener('scroll', onScrollHandler, { passive: true });
 onScrollHandler();
 
-// Klick: smooth nach oben + kurzes Press-Feedback (kein Heartbeat-Loop)
 toTop?.addEventListener('click', () => {
   toTop.style.transform = 'translateY(0) scale(.98)';
   setTimeout(() => (toTop.style.transform = ''), 140);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+
+// ==== Dynamic Glass Light (Scroll + Maus) ====
+// ==== Dynamic Glass Light (nur Scroll, smooth & dezent) ====
+(() => {
+  const root = document.documentElement;
+
+  let targetGy = 22;
+  let currentGy = targetGy;
+  const ease = 0.08;
+
+  // NEU: ganz leichte Grundstärke & Mitte fix (falls Browser Startframe cached)
+  root.style.setProperty('--gshine', '0.68');
+  root.style.setProperty('--gx', '50%');
+
+  function updateTargetFromScroll(){
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const ratio = Math.min(1, Math.max(0, window.scrollY / max));
+    // Licht wandert vertikal zwischen 18% (oben) und 72% (unten) – bewusst kleinerer Bereich
+    targetGy = 18 + ratio * 54;
+  }
+
+  function tick(){
+    // lerp current -> target
+    currentGy += (targetGy - currentGy) * ease;
+    root.style.setProperty('--gy', currentGy.toFixed(2) + '%');
+    requestAnimationFrame(tick);
+  }
+
+  // initial setzen & Loop starten
+  updateTargetFromScroll();
+  requestAnimationFrame(tick);
+
+  // Scroll-Listener (nur Target aktualisieren, Render übernimmt rAF)
+  window.addEventListener('scroll', updateTargetFromScroll, { passive: true });
+
+  // X fix mittig halten (kein Maus-Tracking)
+  root.style.setProperty('--gx', '50%');
+
+  // Optional: Tagesform/Generelle Stärke kannst du hier zentral justieren
+  // root.style.setProperty('--gshine', '0.65');
+})();
 
 
   </script>
